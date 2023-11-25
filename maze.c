@@ -10,11 +10,11 @@ Projekt 2 - bludiště
 #include <stdbool.h>
 /*
 TODO:
-1) Hledat cestu podle L/P. Napadá mě alg podle toho, že když jsem přišel z jedné hrany, tak další bude o jedno větší např 1 -> 2,..
 2) Implementace argv programu
 3) Validace matice
 4) bonus řešení short test
 */
+
 // Implementace 1. Podúkolu - struktura map
 typedef struct
 {
@@ -65,17 +65,18 @@ Map *map_ctor(char *filename)
     }
 
     fclose(ptr);
-    // printf("%d\n", check);
     if (check == map->cols * map->rows)
         return map;
     else
         return NULL;
 }
+// Funkce pro zničení mapy a uvolnění alokované paměti
 void map_dtor(Map *map)
 {
     free(map->cells);
     free(map);
 }
+// Funkce pro tisk matice
 void map_print(Map *map)
 {
     if (map != NULL)
@@ -113,59 +114,180 @@ bool isborder(Map *map, int r, int c, int border)
 }
 
 // 3. Podúkol - Startovní hrana podle podmínek ze zadání
+// Funkce vrací hodnotu počáteční hranice 1 - Levá, 2 - Spodní/dolní, 3 - Pravá
 int start_border(Map *map, int r, int c, int leftright)
 {
-    //  PRAVA RUKA
-    if (leftright == 2)
+    if (r % 2 == 0 && isborder(map, r, c, 1) == false)
     {
-        if (r % 2 == 0 && isborder(map, r, c, 1) == false) // 1
+        if (leftright == 2)
             return 3;
-
-        else if (r % 2 == 1 && isborder(map, r, c, 1) == false) // 2
+        else
             return 2;
-
-        else if (((c % 2 == 0 && r % 2 == 0) || (c % 2 == 1 && r % 2 == 1)) && isborder(map, r, c, 3) == false) // 5
+    }
+    else if (r % 2 == 1 && isborder(map, r, c, 1) == false)
+    {
+        if (leftright == 2)
             return 2;
-
-        else if (((c % 2 == 0 && r % 2 == 1) || (c % 2 == 1 && r % 2 == 0)) && isborder(map, r, c, 3) == false) // 6
-            return 1;
-
-        else if (c % 2 == 0 && r % 2 == 0 && isborder(map, r, c, 2) == false) // 3
-            return 1;
-
-        else if (c % 2 == 0 && r % 2 == 1 && isborder(map, r, c, 2) == false) // 4
+        else
             return 3;
     }
-    // LEVA RUKA
-    if (leftright == 1)
+
+    else if (((c % 2 == 0 && r % 2 == 0) || (c % 2 == 1 && r % 2 == 1)) && isborder(map, r, c, 3) == false)
     {
-        if (r % 2 == 0 && isborder(map, r, c, 1) == false) // 1
+        if (leftright == 2)
             return 2;
-
-        else if (r % 2 == 1 && isborder(map, r, c, 1) == false) // 2
-            return 3;
-
-        else if (((c % 2 == 0 && r % 2 == 0) || (c % 2 == 1 && r % 2 == 1)) && isborder(map, r, c, 3) == false) // 5
+        else
             return 1;
-
-        else if (((c % 2 == 0 && r % 2 == 1) || (c % 2 == 1 && r % 2 == 0)) && isborder(map, r, c, 3) == false) // 6
+    }
+    else if (((c % 2 == 0 && r % 2 == 1) || (c % 2 == 1 && r % 2 == 0)) && isborder(map, r, c, 3) == false)
+    {
+        if (leftright == 2)
+            return 1;
+        else
             return 2;
-
-        else if (c % 2 == 0 && r % 2 == 0 && isborder(map, r, c, 2) == false) // 3
+    }
+    else if (c % 2 == 0 && r % 2 == 0 && isborder(map, r, c, 2) == false)
+    {
+        if (leftright == 2)
+            return 1;
+        else
             return 3;
-
-        else if (c % 2 == 0 && r % 2 == 1 && isborder(map, r, c, 2) == false) // 4
+    }
+    else if (c % 2 == 0 && r % 2 == 1 && isborder(map, r, c, 2) == false)
+    {
+        if (leftright == 2)
+            return 3;
+        else
             return 1;
     }
     return 0;
 }
+
+// Vlastní funkce pro hledání cesty.
+// Složité podmínky vznikly postupným bugfixováním při hledání cesty podle zadání.
+void map_path(Map *map, int r, int c, int border, int leftright)
+{
+    bool move = false;
+    bool end = false;
+    int lastborder = 0;
+    while (end == false)
+    {
+        printf("%d,%d\n", r + 1, c + 1);
+        move = false;
+        while (move == false)
+        {
+            if (isborder(map, r, c, border) == false)
+            {
+                if (border == 1)
+                {
+                    c--;
+                    lastborder = border;
+                    if ((((c % 2 == 1) && (r % 2 == 1)) || ((c % 2 == 0) && (r % 2 == 0))) && leftright == 2)
+                        border = 2;
+                    else if (((((c % 2 == 0) && (r % 2 == 1)) || ((c % 2 == 1) && (r % 2 == 0))) && leftright == 1))
+                        border = 2;
+                    move = true;
+                }
+                else if (border == 3)
+                {
+                    c++;
+                    lastborder = border;
+                    if (leftright == 2)
+                    {
+                        if (((c % 2 == 1) && (r % 2 == 1)) || ((c % 2 == 0) && (r % 2 == 0)))
+                            border = 3;
+                        else
+                            border = 2;
+                    }
+                    else if (leftright == 1)
+                    {
+                        if (((c % 2 == 1) && (r % 2 == 1)) || ((c % 2 == 0) && (r % 2 == 0)))
+                            border = 2;
+                        else
+                            border = 3;
+                    }
+                    move = true;
+                }
+                else if (border == 2 && (((c % 2 == 0 && r % 2 == 1) || (c % 2 == 1 && r % 2 == 0))))
+                {
+                    r++;
+                    lastborder = border;
+                    if (leftright == 2)
+                        border = 1;
+                    else
+                        border = 3;
+                    move = true;
+                }
+                else if (border == 2 && ((c % 2 == 0 && r % 2 == 0) || (c % 2 == 1 && r % 2 == 1)))
+                {
+                    r--;
+                    lastborder = border;
+                    if (leftright == 2)
+                        border = 3;
+                    else
+                        border = 1;
+                    move = true;
+                }
+            }
+            else
+            {
+                if (border == 1)
+                {
+                    if (((((c % 2 == 1) && (r % 2 == 1)) || ((c % 2 == 0) && (r % 2 == 0))) && leftright == 2) || (leftright == 1 && (((c % 2 == 0) && (r % 2 == 1)) || ((c % 2 == 1) && (r % 2 == 0)))))
+                        border = 3;
+                    else
+                        border = 2;
+                    continue;
+                }
+                else if (border == 2)
+                {
+                    if (((c % 2 == 1) && (r % 2 == 1)) || ((c % 2 == 0) && (r % 2 == 0)))
+                    {
+                        if ((lastborder != 3 && leftright == 1) || leftright == 2)
+                            border = 1;
+                        else
+                            border = 3;
+                    }
+                    else
+                    {
+                        if ((leftright == 1 && lastborder == 1) && (((c % 2 == 1) && (r % 2 == 0)) || ((c % 2 == 0) && (r % 2 == 1))))
+                            border = 1;
+                        else
+                            border = 3;
+                    }
+                    continue;
+                }
+                else if (border == 3)
+                {
+                    if (((((c % 2 == 1) && (r % 2 == 1)) || ((c % 2 == 0) && (r % 2 == 0))) && leftright == 2) || (leftright == 1 && lastborder != 2))
+                        border = 2;
+                    else
+                        border = 1;
+                    lastborder = 0;
+                    continue;
+                }
+            }
+        }
+        // Vyhodnocení, zda jsme nevyjeli mimo mapu == konec
+        if (c > map->cols - 1 || c < 0 || r > map->rows - 1 || r < 0)
+        {
+            end = true;
+        }
+    }
+}
 int main() // int argc, char *argv[]
 {
     Map *map = map_ctor("soubor.txt");
-    int leftright = 1;
+    if (map == NULL)
+        return -1;
+
+    int leftright = 2;
+
     map_print(map);
-    int border = start_border(map, 6, 2, leftright);
-    printf("border=%d", border);
+
+    int border = start_border(map, 5, 0, leftright);
+    map_path(map, 5, 0, border, leftright);
     map_dtor(map);
+
     return 0;
 }
