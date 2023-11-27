@@ -11,7 +11,6 @@ Projekt 2 - bludiště
 #include <string.h>
 /*
 TODO:
-3) Validace matice
 4) bonus řešení short test
 */
 
@@ -65,8 +64,11 @@ Map *map_ctor(char *filename)
                     {
                         if (fscanf(ptr, "%u", (unsigned int *)&map->cells[i * map->cols + j]) == 1)
                         {
-                            map->cells[i * map->cols + j] = (unsigned char)map->cells[i * map->cols + j];
-                            check++;
+                            if (map->cells[i * map->cols + j] <= 7)
+                            {
+                                map->cells[i * map->cols + j] = (unsigned char)map->cells[i * map->cols + j];
+                                check++;
+                            }
                         }
                         else
                         {
@@ -328,9 +330,9 @@ int main(int argc, char *argv[])
         {
             printf("Program lze spustit s nasledujicimi parametry:\n");
             printf("1) ./maze --test nazevsouboru.txt vytiskne Valid, pokud je soubor platny jinak Invalid.\n");
-            printf("2) ./maze --rpath R C nazevsouboru.txt vytiskne postupnou cestu bludištěm podle pravidla prave ruky.\n");
-            printf("3) ./maze --lpath R C nazevsouboru.txt vytiskne postupnou cestu bludištěm podle pravidla leve ruky.\n");
-            printf("R je radková a C sloupcova souradnice pocatecniho bodu.\n");
+            printf("2) ./maze --rpath R C nazevsouboru.txt vytiskne postupnou cestu bludistem podle pravidla prave ruky.\n");
+            printf("3) ./maze --lpath R C nazevsouboru.txt vytiskne postupnou cestu bludistem podle pravidla leve ruky.\n");
+            printf("R je radkova a C sloupcova souradnice pocatecniho bodu.\n");
         }
         else
             printf("Invalid syntax.\n");
