@@ -2,16 +2,15 @@
 Autor: Jakub Smička
 Login: xsmickj00
 Projekt 2 - bludiště
-** gcc -std=c11 -Wall -Wextra -Werror maze.c -o maze
+** Argumenty překladu gcc -std=c11 -Wall -Wextra -Werror maze.c -o maze
 */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 /*
 TODO:
-4) bonus řešení short test
+Bonus řešení short test
 */
 
 // Implementace 1. Podúkolu - struktura map
@@ -44,18 +43,19 @@ bool isborder(Map *map, int r, int c, int border)
     return false;
 }
 // Funkce pro alokaci mapy a její vytvoření ze souboru.
+// Funkce vrací vytvořenou strukturu nebo NULL, pokud se cokoliv nepovede (alokace, validace,...)
 Map *map_ctor(char *filename)
 {
     FILE *ptr;
     int check = 0;
     Map *map = malloc(sizeof(Map));
     ptr = fopen(filename, "r");
-
+    // Zajištění, že je soubor neprázdný a povedla se alokace struktury
     if (ptr != NULL && map != NULL)
     {
-        if (fscanf(ptr, "%d %d", &map->rows, &map->cols) == 2)
+        if (fscanf(ptr, "%d %d", &map->rows, &map->cols) == 2) // Načtení počtu řádků a sloupců
         {
-            map->cells = malloc(map->rows * map->cols * sizeof(unsigned char));
+            map->cells = malloc(map->rows * map->cols * sizeof(unsigned char)); // Alokace pole
             if (map->cells != NULL)
             {
                 for (int i = 0; i < map->rows; i++)
@@ -64,7 +64,7 @@ Map *map_ctor(char *filename)
                     {
                         if (fscanf(ptr, "%u", (unsigned int *)&map->cells[i * map->cols + j]) == 1)
                         {
-                            if (map->cells[i * map->cols + j] <= 7)
+                            if (map->cells[i * map->cols + j] <= 7) // Zajištění, že pole obsahuje číslo 0 - 7
                             {
                                 map->cells[i * map->cols + j] = (unsigned char)map->cells[i * map->cols + j];
                                 check++;
@@ -92,7 +92,8 @@ Map *map_ctor(char *filename)
         return NULL;
     }
     fclose(ptr);
-    if (check == map->cols * map->rows)
+
+    if (check == map->cols * map->rows) // Finální kontrola správného načtení všech políček a jejich validace
     {
         for (int i = 0; i < map->rows; i++)
         {
@@ -121,11 +122,16 @@ Map *map_ctor(char *filename)
                 }
             }
         }
-        return map;
+        return map; // Pokud vše projde
     }
     else
+    {
+        free(map->cells);
+        free(map);
         return NULL;
+    }
 }
+
 // Funkce pro zničení mapy a uvolnění alokované paměti
 void map_dtor(Map *map)
 {
@@ -134,7 +140,8 @@ void map_dtor(Map *map)
     free(map->cells);
     free(map);
 }
-// Funkce pro tisk matice
+
+// Funkce pro tisk matice (využito při sestavování funkcí)
 void map_print(Map *map)
 {
     if (map != NULL)
@@ -309,6 +316,7 @@ void map_path(Map *map, int r, int c, int border, int leftright)
                 }
             }
         }
+
         // Vyhodnocení, zda jsme nevyjeli mimo mapu == konec
         if (c > map->cols - 1 || c < 0 || r > map->rows - 1 || r < 0)
         {
@@ -397,6 +405,7 @@ int main(int argc, char *argv[])
         if (border == 0)
         {
             printf("Nelze vstoupit na tomto policku!");
+            map_dtor(map);
             return -1;
         }
         map_path(map, r, c, border, leftright);
